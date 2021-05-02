@@ -3,7 +3,7 @@
 """
 Tower Defence Solver.
 
-This algorithm employs genetic algorithm to find as good solution as possible to the Tower Defence gameplay problem.
+This algorithm employs evolutionary approach to find as good solution as possible to the Tower Defence gameplay problem.
 """
 import numpy as np
 import tower_defence_solver.utils as utils
@@ -22,7 +22,7 @@ class TowerDefenceSolver:
             enemy_spawning_function: Callable,
             initial_hp: int,
             initial_gold: int
-    ):
+    ) -> None:
         """
         Main instance of the solver.
 
@@ -44,22 +44,34 @@ class TowerDefenceSolver:
 
         self.move_generator = list(zip(self.path[::-1], self.path[-2::-1]))
 
-    def __get_initial_population(self, n_candidates: int):
+    def __get_initial_population(
+            self,
+            n_candidates: int
+    ) -> List[List[Dict]]:
+        """
+        Function returning the candidates of initial population.
+
+        :param n_candidates:
+        :return:
+        """
         population = []
         for _ in range(n_candidates):
             sample = []
             gold_for_sample = self.initial_gold
-            possible_options = list(filter(lambda x: x[1]['cost'] <= gold_for_sample, self.tower_types.items()))
+            possible_options = [item for item in self.tower_types.items() if item[1]['cost'] <= gold_for_sample]
 
             while possible_options:
                 purchase_time = utils.get_random_purchase_time(0.3)
                 tower_idx, tower = utils.choose_random_tower(possible_options)
 
                 dmg_height, dmg_width = tower['dmg'].shape
-                dmg_width //= 2  # pozbywamy się tego i od razu jest bardziej randomowo jeśli chodzi o pozycje wieżyczek
-                dmg_height //= 2
 
-                position = utils.get_random_position_near_path(self, dmg_width, dmg_height, purchased_towers=sample)
+                position = utils.get_random_position_near_path(
+                    game=self,
+                    cov_xx=dmg_width//2,
+                    cov_yy=dmg_height//2,
+                    purchased_towers=sample
+                )
 
                 gold_for_sample -= tower['cost']
                 possible_options = list(filter(lambda x: x[1]['cost'] <= gold_for_sample, self.tower_types.items()))
@@ -76,7 +88,7 @@ class TowerDefenceSolver:
             candidate_pool: int = 100,
             premature_death_reincarnation: int = 0,
             survivors_per_epoch: int = 20
-    ):
+    ) -> None:
         """
         Solve for best possible gameplay given provided parameters.
 
@@ -87,8 +99,6 @@ class TowerDefenceSolver:
         :return:
         """
         initial_population = self.__get_initial_population(candidate_pool)
-        #print(initial_population)
-        #return
 
         candidates = [Candidate(purchases, self) for purchases in initial_population]
         first_time = None
@@ -100,10 +110,10 @@ class TowerDefenceSolver:
             n_dead = 0
             while n_dead < n_must_die:
 
-                for element in candidates:
-                    element.simulate_step()
+                for candidate in candidates:
+                    candidate.simulate_step()
 
-                    if element.base_hp <= 0:
+                    if candidate.base_hp <= 0:
                         n_dead += 1
                         if n_dead >= n_must_die:
                             break
@@ -112,7 +122,7 @@ class TowerDefenceSolver:
                             # swap_sim()
                             left_to_add -= 1
                         else:
-                            candidates.remove(element)
+                            candidates.remove(candidate)
 
             if i == 0:
                 first_time = candidates[0].time
@@ -120,9 +130,8 @@ class TowerDefenceSolver:
             print(f'ITERATION: {i}\tMAX TIME: {candidates[0].time}{" " * 30}[{first_time}]')
             candidates = reproduction.reproduction(self, candidates, n_must_die)
 
-            # print(elements)
             purchases_numbers = list(map(lambda el: len(el.purchases), candidates))
             print("AVG NUMBER OF PURCHASES: ", np.average(purchases_numbers))
 
-            for element in candidates:
-                element.refresh()
+            for candidate in candidates:
+                candidate.refresh()

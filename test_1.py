@@ -17,7 +17,7 @@ class TestTDSolver(unittest.TestCase):
         }
 
         def spawn(x):
-            return 4 * x
+            return 20 * x
 
         game = TowerDefenceSolver(
             map_width=7,
@@ -28,7 +28,12 @@ class TestTDSolver(unittest.TestCase):
             initial_hp=100,
             initial_gold=1000
         )
-        game.solve()
+        game.solve(
+            epochs=20,
+            candidate_pool=100,
+            premature_death_reincarnation=0,
+            survivors_per_epoch=20
+        )
         self.assertTrue(True)
 
 

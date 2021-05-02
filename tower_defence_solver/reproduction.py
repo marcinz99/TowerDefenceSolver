@@ -1,10 +1,20 @@
+# BO 2021
+# Authors: Łukasz Kita, Mateusz Pawłowicz, Michał Szczepaniak, Marcin Zięba
+"""
+Tower Defence Solver.
+
+Genetic operations.
+"""
 import copy
 import numpy as np
 import tower_defence_solver.utils as utils
 from tower_defence_solver.candidate import Candidate
+from tower_defence_solver import TowerDefenceSolver
+from typing import List
 
 
-#  UNARY
+# ========== UNARY OPERATORS ==========
+
 def addition(game, origin):
     #  print("ADDITION")
     new_purchases = copy.deepcopy(origin.initial_purchases)
@@ -82,7 +92,8 @@ def time_translation(game, origin):
     return Candidate(new_purchases, game)
 
 
-#  BINARY
+# ========== BINARY OPERATORS ==========
+
 def cross(game, parent_a, parent_b):
     time = parent_a.time
     A_purchases_before_simulation_has_finished, A_purchases_after_simulation_has_finished \
@@ -143,8 +154,19 @@ unary_reproduction = [addition, deletion, permutation, time_translation]
 binary_reproduction = [cross]
 
 
-def reproduction(game, candidates, how_many_to_add):
+def reproduction(
+        game: TowerDefenceSolver,
+        candidates: List[Candidate],
+        how_many_to_add: int
+) -> List[Candidate]:
+    """
+    Reproduce the provided candidates by the given amount.
 
+    :param game:
+    :param candidates:
+    :param how_many_to_add:
+    :return:
+    """
     how_many_added = 0
 
     while how_many_added != how_many_to_add:
