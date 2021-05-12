@@ -13,7 +13,7 @@ from tower_defence_solver import TowerDefenceSolver
 from typing import List, Dict, Tuple, Optional
 
 Purchases = List[Dict]
-
+MAX_TRIES = 10
 
 # ========== UNARY OPERATORS ==========
 
@@ -185,17 +185,28 @@ def cross(
         return None
 
     a_starting_point, a_ending_point = get_split_points(parent_a_purchases_before_simulation_has_finished)
-    b_starting_point, b_ending_point = get_split_points(parent_b_purchases_before_simulation_has_finished)
-
     new_purchases = copy.deepcopy(parent_a_purchases_before_simulation_has_finished)
     for i in range(a_starting_point, a_ending_point):
         new_purchases.pop(a_starting_point)
 
-    for i in range(b_starting_point, b_ending_point):
-        new_purchases.append(parent_b_purchases_before_simulation_has_finished[i])
-
     new_purchases.extend(parent_a_purchases_after_simulation_has_finished)
-
+    new_purchases_copy = copy.deepcopy(new_purchases)
+    was_everything_added = False
+    how_many_tries = 0
+    while not was_everything_added and how_many_tries<MAX_TRIES:
+        new_purchases = copy.deepcopy(new_purchases_copy)
+        b_starting_point, b_ending_point = get_split_points(parent_b_purchases_before_simulation_has_finished)
+        was_everything_added = True
+        for i in range(b_starting_point, b_ending_point):
+            purchase_to_be_added = parent_b_purchases_before_simulation_has_finished[i]
+            purchase_coords = purchase_to_be_added["coords"]
+            if not utils.validate_pos(game, purchase_coords, new_purchases):
+                was_everything_added = False
+                break
+            new_purchases.append(purchase_to_be_added)
+        how_many_tries += 1
+    if how_many_tries >= MAX_TRIES:
+        return None
     return Candidate(new_purchases, game)
 
 
@@ -275,7 +286,7 @@ def reproduction(
     how_many_added = 0
 
     while how_many_added != how_many_to_add:
-        x = np.random.binomial(1, 0.0)
+        x = np.random.choice([0,1])
         is_binary = x == 1
         is_unary = x == 0
 
