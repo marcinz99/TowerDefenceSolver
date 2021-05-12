@@ -38,7 +38,7 @@ class TestTDSolver(unittest.TestCase):
             return int(np.abs(np.random.normal(10*x, x/10)))
 
         def spawn4(x):
-            return int(np.random.normal(15*x, 20))
+            return int(np.abs(np.random.normal(15*x, 20)))
 
         def spawn5(x):
             return int(np.sqrt(100*x))
