@@ -131,7 +131,6 @@ class TowerDefenceSolver:
             candidates = reproduction.reproduction(self, candidates, n_must_die)
 
             purchases_numbers = list(map(lambda el: len(el.purchases), candidates))
-            print("AVG NUMBER OF PURCHASES: ", np.average(purchases_numbers))
 
             for candidate in candidates:
                 candidate.refresh()

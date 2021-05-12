@@ -10,13 +10,27 @@ import numpy as np
 import tower_defence_solver.utils as utils
 from tower_defence_solver.candidate import Candidate
 from tower_defence_solver import TowerDefenceSolver
-from typing import List
+from typing import List, Dict, Tuple, Optional
+
+Purchases = List[Dict]
 
 
 # ========== UNARY OPERATORS ==========
 
-def addition(game, origin):
-    #  print("ADDITION")
+
+def addition(
+        game: TowerDefenceSolver,
+        origin: Candidate
+) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list the same as origin's purchase list
+    concatenated with additional single purchase.
+
+    :param game: Instance of tower defence emulator
+    :param origin: candidate, on whose purchases list new candidate purchased will be based on
+    :return: candidate with newly added purchase if possible, None otherwise
+    """
+
     new_purchases = copy.deepcopy(origin.initial_purchases)
     position = utils.get_random_position_near_path(game, game.map_height//2, game.map_width//2, origin.initial_purchases, game.map_height*game.map_width)
     if position is None:
@@ -29,11 +43,23 @@ def addition(game, origin):
     return Candidate(new_purchases, game)
 
 
-def deletion(game, origin):
-    #  print("DELETION")
+def deletion(
+        game: TowerDefenceSolver,
+        origin: Candidate
+) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list the same as origin's purchase list, but with one purchase missing
+    The purchase to be deleted is taken from these purchases, which had a chance to be done,
+    but if there are no such a purchases, it will be randomly taken from the whole purchases list.
+
+    :param game: Instance of tower defence emulator
+    :param origin: candidate, on whose purchases list new candidate purchased will be based on
+    :return: candidate with delete purchase if possible, None otherwise
+    """
+
     time = origin.time
     purchases_before_simulation_has_finished, purchases_after_simulation_has_finished \
-        = split_purchases_into_minimum_n_purchases_before_time(1, time, origin.initial_purchases)
+        = split_purchases_into_minimum_n_elements_at_given_point_in_time(1, time, origin.initial_purchases)
 
     if purchases_before_simulation_has_finished is None:
         return None
@@ -46,34 +72,66 @@ def deletion(game, origin):
     return Candidate(new_purchases, game)
 
 
-def permutation(game, origin):
-    #  print("PERMUTATION")
+def permutation(
+        game: TowerDefenceSolver,
+        origin: Candidate
+) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list the same as origin's purchase list, but with time
+    of random two purchases being replaced.
+    The permutated purchases are taken from these purchases, which had a chance to be done,
+    but in case there is not enough of them, they will be randomly taken from the whole purchases list.
+
+
+    :param game: Instance of tower defence emulator
+    :param origin: candidate, on whose purchases list new candidate purchased will be based on
+    :return: candidate with permutated two purchases if possible, None otherwise
+    """
+
     time = origin.time
     purchases_before_simulation_has_finished, purchases_after_simulation_has_finished \
-        = split_purchases_into_minimum_n_purchases_before_time(2, time, origin.initial_purchases)
+        = split_purchases_into_minimum_n_elements_at_given_point_in_time(2, time, origin.initial_purchases)
 
     if purchases_before_simulation_has_finished is None:
         return None
 
     first_id = np.random.choice(len(purchases_before_simulation_has_finished))
     second_id = first_id
+
     while second_id == first_id:
         second_id = np.random.choice(len(purchases_before_simulation_has_finished))
 
     new_purchases = copy.deepcopy(purchases_before_simulation_has_finished)
-    new_purchases[first_id]["coords"], new_purchases[second_id]["coords"] = new_purchases[second_id]["coords"], new_purchases[first_id]["coords"]
-    new_purchases[first_id]["type"], new_purchases[second_id]["type"] = new_purchases[second_id]["type"], new_purchases[first_id]["type"]
+
+    new_purchases[first_id]["coords"], new_purchases[second_id]["coords"] = \
+        new_purchases[second_id]["coords"], new_purchases[first_id]["coords"]
+
+    new_purchases[first_id]["type"], new_purchases[second_id]["type"] =\
+        new_purchases[second_id]["type"], new_purchases[first_id]["type"]
+
     new_purchases.extend(purchases_after_simulation_has_finished)
 
     return Candidate(new_purchases, game)
 
 
-def time_translation(game, origin):
-    #  print("TRANSLATION")
+def time_translation(
+        game: TowerDefenceSolver,
+        origin: Candidate
+) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list the same as origin's purchase list, but with time of one random
+    purchase being changed.
+    The chosen purchase can be as well postponed as preponed.
+
+    :param game: Instance of tower defence emulator
+    :param origin: candidate, on whose purchases list new candidate purchased will be based on
+    :return: candidate with one purchase translated in time if possible, None otherwise
+    """
+
     time = origin.time
 
     purchases_before_simulation_has_finished, purchases_after_simulation_has_finished \
-        = split_purchases_into_minimum_n_purchases_before_time(1, time, origin.initial_purchases)
+        = split_purchases_into_minimum_n_elements_at_given_point_in_time(1, time, origin.initial_purchases)
 
     if purchases_before_simulation_has_finished is None:
         return None
@@ -94,36 +152,63 @@ def time_translation(game, origin):
 
 # ========== BINARY OPERATORS ==========
 
-def cross(game, parent_a, parent_b):
+
+def cross(
+        game: TowerDefenceSolver,
+        parent_a: Candidate,
+        parent_b: Candidate
+) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list being the combination of parents' purchases list.
+    The purchases list of the newly created candidate is the purchases list of the first parent, with
+    some sequence of orders being replaced with the sequence derived from the second parent.
+    The sequences are tried to be taken from these purchases which had a chance to be done, but if there are
+    not enough of them they will be taken from the whole purchases list.
+
+    :param game: Instance of tower defence emulator
+    :param parent_a: first parent
+    :param parent_b: second parent
+    :return: candidate with purchases being the combination of parents' purchases if possible, None otherwise
+    """
+
     time = parent_a.time
-    A_purchases_before_simulation_has_finished, A_purchases_after_simulation_has_finished \
-        = split_purchases_into_minimum_n_purchases_before_time(2, time, parent_a.initial_purchases)
+    parent_a_purchases_before_simulation_has_finished, parent_a_purchases_after_simulation_has_finished \
+        = split_purchases_into_minimum_n_elements_at_given_point_in_time(2, time, parent_a.initial_purchases)
 
-    if A_purchases_before_simulation_has_finished is None:
+    if parent_a_purchases_before_simulation_has_finished is None:
         return None
 
-    B_purchases_before_simulation_has_finished, B_purchases_after_simulation_has_finished \
-        = split_purchases_into_minimum_n_purchases_before_time(2, time, parent_b.initial_purchases)
+    parent_b_purchases_before_simulation_has_finished, _ \
+        = split_purchases_into_minimum_n_elements_at_given_point_in_time(2, time, parent_b.initial_purchases)
 
-    if B_purchases_before_simulation_has_finished is None:
+    if parent_b_purchases_before_simulation_has_finished is None:
         return None
 
-    a_starting_point, a_ending_point = get_split_points(A_purchases_before_simulation_has_finished)
-    b_starting_point, b_ending_point = get_split_points(B_purchases_before_simulation_has_finished)
+    a_starting_point, a_ending_point = get_split_points(parent_a_purchases_before_simulation_has_finished)
+    b_starting_point, b_ending_point = get_split_points(parent_b_purchases_before_simulation_has_finished)
 
-    new_purchases = copy.deepcopy(A_purchases_before_simulation_has_finished)
+    new_purchases = copy.deepcopy(parent_a_purchases_before_simulation_has_finished)
     for i in range(a_starting_point, a_ending_point):
         new_purchases.pop(a_starting_point)
 
     for i in range(b_starting_point, b_ending_point):
-        new_purchases.append(B_purchases_before_simulation_has_finished[i])
+        new_purchases.append(parent_b_purchases_before_simulation_has_finished[i])
 
-    new_purchases.extend(A_purchases_after_simulation_has_finished)
+    new_purchases.extend(parent_a_purchases_after_simulation_has_finished)
 
     return Candidate(new_purchases, game)
 
 
-def get_split_points(purchases):
+def get_split_points(
+        purchases: Purchases
+) -> Tuple[int, int]:
+    """
+    Finds indexes allowing the split of the purchases list into three parts
+
+    :param purchases: list of purchases
+    :return: two different indexes indicating points in time which could be
+             used to cut a part of the given purchases list
+    """
     first_id = np.random.choice(len(purchases))
     second_id = first_id
 
@@ -136,12 +221,32 @@ def get_split_points(purchases):
     return starting_point, ending_point
 
 
-def split_purchases_into_minimum_n_purchases_before_time(n, time, purchases):
+def split_purchases_into_minimum_n_elements_at_given_point_in_time(
+        n: int,
+        time: int,
+        purchases: Purchases
+) -> Optional[Tuple[Purchases, Purchases]]:
+    """
+    Splits the given purchases list into two parts in the given point of time,
+    with the first part consisting of at least n elements.
+
+    :param n: number of elements which must be in the first part of the split list
+    :param time: point in time
+    :param purchases: list of purchases
+    :return: tuple consisting of two parts of the split list if possible, None otherwise
+    """
     if len(purchases) < n:
         return None, None
 
-    purchases_before_time = list(filter(lambda purchase: purchase.get("time") < time, purchases))
-    purchases_after_time = list(filter(lambda purchase: purchase.get("time") >= time, purchases))
+    purchases_before_time = list(filter(
+        lambda purchase: purchase.get("time") < time,
+        purchases
+    ))
+
+    purchases_after_time = list(filter(
+        lambda purchase: purchase.get("time") >= time,
+        purchases
+    ))
 
     if len(purchases_before_time) < n:
         purchases_before_time = purchases
@@ -150,8 +255,8 @@ def split_purchases_into_minimum_n_purchases_before_time(n, time, purchases):
     return purchases_before_time, purchases_after_time
 
 
-unary_reproduction = [addition, deletion, permutation, time_translation]
-binary_reproduction = [cross]
+UNARY_REPRODUCTION = [addition, deletion, permutation, time_translation]
+BINARY_REPRODUCTION = [cross]
 
 
 def reproduction(
@@ -175,27 +280,25 @@ def reproduction(
         is_unary = x == 0
 
         if is_binary:
-            parent_A = np.random.choice(candidates)
-            parent_B = parent_A
+            parent_a = np.random.choice(candidates)
+            parent_b = parent_a
 
-            while parent_B == parent_A:
-                parent_B = np.random.choice(candidates)
+            while parent_b == parent_a:
+                parent_b = np.random.choice(candidates)
 
-            operator = np.random.choice(binary_reproduction)
-            element_to_add = operator(game, parent_A, parent_B)
+            operator = np.random.choice(BINARY_REPRODUCTION)
+            element_to_add = operator(game, parent_a, parent_b)
 
             if element_to_add is not None:
                 candidates.append(element_to_add)
                 how_many_added += 1
 
         elif is_unary:
-            operator = np.random.choice(unary_reproduction)
-            origin = candidates[np.random.choice(len(candidates))]
-            #  print(len(origin.initial_purchases))
+            operator = np.random.choice(UNARY_REPRODUCTION)
+            origin = np.random.choice(candidates)
             element_to_add = operator(game, origin)
 
             if element_to_add is not None:
-                #  print(len(origin.initial_purchases), len(element_to_add.purchases))
                 candidates.append(element_to_add)
                 how_many_added += 1
 
