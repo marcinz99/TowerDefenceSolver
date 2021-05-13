@@ -9,6 +9,8 @@ import numpy as np
 from tower_defence_solver import TowerDefenceSolver
 from typing import List, Tuple, Dict, Optional
 
+Purchases = List[Dict]
+
 
 def get_random_purchase_time(
         p: float
@@ -24,17 +26,29 @@ def get_random_purchase_time(
     return np.random.geometric(p)
 
 
-def choose_random_tower(
-        towers: List[Tuple[int, Dict]]
-) -> Tuple[int, Dict]:
-    return towers[np.random.choice(len(towers))]
+def choose_random_tower(towers: List[Tuple[int, Dict]]
+                       ) -> Tuple[int, Dict]:
+    """
 
+    :param towers: list of towers
+    :return: randomly chosen tower (with uniform distribution)
+    """
+    return towers[np.random.choice(len(towers))]
 
 def validate_pos(
         game: TowerDefenceSolver,
         position: Tuple[int, int],
-        sample
+        purchases_list: Purchases
 ) -> bool:
+    """
+    Checks if
+ the given position is inside the map and is not occupied by some tower
+
+    :param game: Instance of tower defence emulator
+    :param position: tuple of indexes indicating the position on map
+    :param purchases_list: list of purchases
+    :return: True if the place is not occupied and is inside the map, False otherwise
+    """
     if (
         position[0] < 0
         or position[1] < 0
@@ -44,7 +58,7 @@ def validate_pos(
     ):
         return False
 
-    for purchase in sample:
+    for purchase in purchases_list:
         if purchase['coords'] == position:
             return False
 
@@ -55,7 +69,7 @@ def get_random_position_near_path(
         game: TowerDefenceSolver,
         cov_xx: int,
         cov_yy: int,
-        purchased_towers: List[Dict],
+        purchased_towers: Purchases,
         max_number_of_tries: Optional[int] = None
 ) -> Optional[Tuple[int, int]]:
     """
@@ -92,7 +106,15 @@ def get_random_position_near_path(
     return position
 
 
-def get_dmg_patch(game, coords, tower_type):
+def get_dmg_patch(game: TowerDefenceSolver, coords: Tuple[int, int], tower_type: int) -> np.array:
+    """
+    Returns a 2D array of additional damage taken by a tower of given type, placed on a given position
+
+    :param game: instance of tower defence emulator
+    :param coords: position where the tower will be placed
+    :param tower_type: integer indicating the tower type (order in game.tower_types list)
+    :return: array describing the additional damage taken by a tower of the specified type placed on some coordinates
+    """
     # Prepare damage adjustment to add
     patch = game.tower_types[tower_type]['dmg']
     additional_dmg = np.zeros((game.map_height, game.map_width))
