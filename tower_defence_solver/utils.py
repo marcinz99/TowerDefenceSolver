@@ -12,9 +12,7 @@ from typing import List, Tuple, Dict, Optional
 Purchases = List[Dict]
 
 
-def get_random_purchase_time(
-        p: float
-) -> float:
+def get_random_purchase_time(p: float) -> float:
     """
     For p=0.3 it varies from 0 to 10-15, maybe we should keep it always p=0.3
     and add parameter for starting time (so we can manipulate when the purchase
@@ -26,23 +24,19 @@ def get_random_purchase_time(
     return np.random.geometric(p)
 
 
-def choose_random_tower(towers: List[Tuple[int, Dict]]
-                       ) -> Tuple[int, Dict]:
+def choose_random_tower(towers: List[Tuple[int, Dict]]) -> Tuple[int, Dict]:
     """
+    Chooses random tower
 
     :param towers: list of towers
     :return: randomly chosen tower (with uniform distribution)
     """
     return towers[np.random.choice(len(towers))]
 
-def validate_pos(
-        game: TowerDefenceSolver,
-        position: Tuple[int, int],
-        purchases_list: Purchases
-) -> bool:
+
+def validate_pos(game: TowerDefenceSolver, position: Tuple[int, int], purchases_list: Purchases) -> bool:
     """
-    Checks if
- the given position is inside the map and is not occupied by some tower
+    Checks if the given position is inside the map and is not occupied by some tower
 
     :param game: Instance of tower defence emulator
     :param position: tuple of indexes indicating the position on map
@@ -59,18 +53,18 @@ def validate_pos(
         return False
 
     for purchase in purchases_list:
-        if purchase['coords'] == position:
+        if purchase["coords"] == position:
             return False
 
     return True
 
 
 def get_random_position_near_path(
-        game: TowerDefenceSolver,
-        cov_xx: int,
-        cov_yy: int,
-        purchased_towers: Purchases,
-        max_number_of_tries: Optional[int] = None
+    game: TowerDefenceSolver,
+    cov_xx: int,
+    cov_yy: int,
+    purchased_towers: Purchases,
+    max_number_of_tries: Optional[int] = None,
 ) -> Optional[Tuple[int, int]]:
     """
     May require to increase cov_x and cov_y as function retries to find free space
@@ -84,9 +78,10 @@ def get_random_position_near_path(
     :param max_number_of_tries:
     :return:
     """
-    position = tuple(np.round(np.random.multivariate_normal(
-        game.path[np.random.choice(len(game.path))],
-        cov=[[cov_xx, 0], [0, cov_yy]])).astype(int)
+    position = tuple(
+        np.round(
+            np.random.multivariate_normal(game.path[np.random.choice(len(game.path))], cov=[[cov_xx, 0], [0, cov_yy]])
+        ).astype(int)
     )
 
     number_of_tries = 0
@@ -94,8 +89,7 @@ def get_random_position_near_path(
         position = tuple(
             np.round(
                 np.random.multivariate_normal(
-                    game.path[np.random.choice(len(game.path))],
-                    cov=[[cov_xx, 0], [0, cov_yy]]
+                    game.path[np.random.choice(len(game.path))], cov=[[cov_xx, 0], [0, cov_yy]]
                 )
             ).astype(int)
         )
@@ -116,7 +110,7 @@ def get_dmg_patch(game: TowerDefenceSolver, coords: Tuple[int, int], tower_type:
     :return: array describing the additional damage taken by a tower of the specified type placed on some coordinates
     """
     # Prepare damage adjustment to add
-    patch = game.tower_types[tower_type]['dmg']
+    patch = game.tower_types[tower_type]["dmg"]
     additional_dmg = np.zeros((game.map_height, game.map_width))
 
     row, col = coords
