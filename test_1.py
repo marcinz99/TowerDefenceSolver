@@ -50,14 +50,18 @@ class TestTDSolver(unittest.TestCase):
             tower_types=tower_types,
             enemy_spawning_function=spawn1,
             initial_hp=100,
-            initial_gold=2000
+            initial_gold=2000,
+            binary_op_prob=None,
+            unary_ops_prob_distribution=[0.4, 0.2, 0.2, 0.2],
+            binary_ops_prob_distribution=None
         )
-        game.solve(
-            epochs=100,
+        solution = game.solve(
+            epochs=40,
             candidate_pool=100,
             premature_death_reincarnation=0,
             survivors_per_epoch=20
         )
+        print(solution)
         self.assertTrue(True)
 
 

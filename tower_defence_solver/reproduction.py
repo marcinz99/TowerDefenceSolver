@@ -286,7 +286,7 @@ def reproduction(
     how_many_added = 0
 
     while how_many_added != how_many_to_add:
-        x = np.random.choice([0,1])
+        x = np.random.choice([0,1], p=game.p_binary)
         is_binary = x == 1
         is_unary = x == 0
 
@@ -297,7 +297,7 @@ def reproduction(
             while parent_b == parent_a:
                 parent_b = np.random.choice(candidates)
 
-            operator = np.random.choice(BINARY_REPRODUCTION)
+            operator = np.random.choice(BINARY_REPRODUCTION, p=game.p_binary_ops)
             element_to_add = operator(game, parent_a, parent_b)
 
             if element_to_add is not None:
@@ -305,7 +305,7 @@ def reproduction(
                 how_many_added += 1
 
         elif is_unary:
-            operator = np.random.choice(UNARY_REPRODUCTION)
+            operator = np.random.choice(UNARY_REPRODUCTION, p=game.p_unary_ops)
             origin = np.random.choice(candidates)
             element_to_add = operator(game, origin)
 
