@@ -12,7 +12,14 @@ from typing import List, Tuple, Dict, Optional
 Purchases = List[Dict]
 
 
-def get_random_purchase_time(p: float) -> float:
+def get_random_purchase_time(time: int) -> int:
+    if np.random.rand() < 0.9:
+        return int(np.random.uniform(0, time))
+    else:
+        return int(np.abs(np.random.standard_cauchy()*0.2*time)+time)
+
+
+def get_random_initial_purchase_time(p: float) -> int:
     """
     For p=0.3 it varies from 0 to 10-15, maybe we should keep it always p=0.3
     and add parameter for starting time (so we can manipulate when the purchase
@@ -126,4 +133,4 @@ def get_dmg_patch(game: TowerDefenceSolver, coords: Tuple[int, int], tower_type:
 
             additional_dmg[row + j, col + i] = patch[radius_col + i, radius_row + j]
 
-    return additional_dmg
+    return additional_dmg/2
