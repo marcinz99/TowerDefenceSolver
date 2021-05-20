@@ -27,6 +27,7 @@ def addition(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]
     :param origin: candidate, on whose purchases list new candidate purchased will be based on
     :return: candidate with newly added purchase if possible, None otherwise
     """
+    time = origin.time
     new_purchases = copy.deepcopy(origin.initial_purchases)
     position = utils.get_random_position_near_path(
         game, game.map_height // 2, game.map_width // 2, origin.initial_purchases, game.map_height * game.map_width
@@ -34,11 +35,10 @@ def addition(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]
     if position is None:
         return None
     tower_id = np.random.choice(list(game.tower_types.keys()))
-    to_be_added = {"time": utils.get_random_purchase_time(0.5), "coords": position, "type": tower_id}
+    to_be_added = {"time": utils.get_random_purchase_time(time), "coords": position, "type": tower_id}
     new_purchases.append(to_be_added)
     new_purchases = sorted(new_purchases, key=lambda x: x["time"])
-
-    return Candidate(new_purchases, game)
+    return Candidate(new_purchases, game, time=time)
 
 
 def deletion(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]:
@@ -65,7 +65,7 @@ def deletion(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]
     new_purchases.pop(id_to_be_removed)
     new_purchases.extend(purchases_after_simulation_has_finished)
 
-    return Candidate(new_purchases, game)
+    return Candidate(new_purchases, game, time=time)
 
 
 def permutation(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]:
@@ -108,7 +108,7 @@ def permutation(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candida
 
     new_purchases.extend(purchases_after_simulation_has_finished)
 
-    return Candidate(new_purchases, game)
+    return Candidate(new_purchases, game, time=time)
 
 
 def time_translation(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]:
@@ -142,7 +142,7 @@ def time_translation(game: TowerDefenceSolver, origin: Candidate) -> Optional[Ca
     new_purchases.append(purchase)
     new_purchases = sorted(new_purchases, key=lambda x: x["time"])
 
-    return Candidate(new_purchases, game)
+    return Candidate(new_purchases, game, time=time)
 
 
 # ========== BINARY OPERATORS ==========
@@ -208,7 +208,7 @@ def cross(game: TowerDefenceSolver, parent_a: Candidate, parent_b: Candidate) ->
     if how_many_tries >= MAX_TRIES:
         return None
 
-    return Candidate(new_purchases, game)
+    return Candidate(new_purchases, game, time=time)
 
 
 def get_split_points(purchases: Purchases) -> Tuple[int, int]:
@@ -273,8 +273,8 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
 
     while how_many_added != how_many_to_add:
         x = np.random.choice([0, 1], p=game.p_binary)
-        is_binary = x == 1
-        is_unary = x == 0
+        is_binary = x == 0
+        is_unary = x == 1
 
         if is_binary:
             parent_a = np.random.choice(candidates)
@@ -284,6 +284,7 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
                 parent_b = np.random.choice(candidates)
 
             operator = np.random.choice(BINARY_REPRODUCTION, p=game.p_binary_ops)
+
             element_to_add = operator(game, parent_a, parent_b)
 
             if element_to_add is not None:
@@ -294,7 +295,6 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
             operator = np.random.choice(UNARY_REPRODUCTION, p=game.p_unary_ops)
             origin = np.random.choice(candidates)
             element_to_add = operator(game, origin)
-
             if element_to_add is not None:
                 candidates.append(element_to_add)
                 how_many_added += 1
