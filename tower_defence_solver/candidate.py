@@ -5,10 +5,13 @@ Tower Defence Solver.
 
 Candidate class.
 """
+# Required for typing class inside itself
+from __future__ import annotations
+
 import copy
 import numpy as np
 from tower_defence_solver.utils import get_dmg_patch
-from tower_defence_solver import TowerDefenceSolver
+from tower_defence_solver import TowerDefenceSolver, utils
 from typing import List, Dict
 
 
@@ -41,6 +44,34 @@ class Candidate:
         frame += "\n" + str(self.dmg_map)
         frame += "\n" + str(self.initial_purchases) + "\n"
         return frame
+
+    def swap_sim(self, candidates: List[Candidate]) -> None:
+        """
+        :param candidates: List of alive candidates
+        :return: None
+        """
+        base_candidate = np.random.choice(candidates)
+        while base_candidate == self:
+            base_candidate = np.random.choice(candidates)
+
+        self.purchases = copy.deepcopy(base_candidate.purchases)
+        self.dmg_map = np.copy(base_candidate.dmg_map)
+        self.opponent_hp = np.copy(base_candidate.opponent_hp)
+        self.time = base_candidate.time
+        self.gold = base_candidate.gold
+
+        purchases_todo = [purchase for purchase in self.purchases if purchase["time"] >= self.time]
+        for purchase in purchases_todo:
+            # Randomly change tower type, position and maybe buy a bit later
+            purchase["type"] = np.random.choice(len(self.game.tower_types))
+            dmg_height, dmg_width = self.game.tower_types[purchase["type"]]["dmg"].shape
+            purchase["coords"] = utils.get_random_position_near_path(
+                    game=self.game,
+                    cov_xx=dmg_width // 2,
+                    cov_yy=dmg_height // 2,
+                    purchased_towers=self.purchases
+                )
+            purchase["time"] += utils.get_random_purchase_time(0.5)
 
     def refresh(self) -> None:
         """
