@@ -62,16 +62,17 @@ class Candidate:
 
         purchases_todo = [purchase for purchase in self.purchases if purchase["time"] >= self.time]
         for purchase in purchases_todo:
+            modified_purchase = utils.get_random_purchase(self.game, self.purchases, self.time)
             # Randomly change tower type, position and maybe buy a bit later
-            purchase["type"] = np.random.choice(len(self.game.tower_types))
-            dmg_height, dmg_width = self.game.tower_types[purchase["type"]]["dmg"].shape
-            purchase["coords"] = utils.get_random_position_near_path(
-                    game=self.game,
-                    cov_xx=dmg_width // 2,
-                    cov_yy=dmg_height // 2,
-                    purchased_towers=self.purchases
-                )
-            purchase["time"] += utils.get_random_purchase_time(0.5)
+            purchase["type"] = modified_purchase["type"]
+            purchase["coords"] = modified_purchase["coords"]
+            purchase["time"] = modified_purchase["time"]
+
+        future_purchases = np.random.choice(3)
+        for _ in range(future_purchases):
+            self.purchases.append(utils.get_random_purchase(self.game, self.purchases, self.time))
+
+        self.purchases = sorted(self.purchases, key=lambda x: x["time"])
 
     def refresh(self) -> None:
         """
