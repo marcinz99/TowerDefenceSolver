@@ -107,6 +107,7 @@ class TowerDefenceSolver:
         candidate_pool: int = 100,
         premature_death_reincarnation: int = 0,
         survivors_per_epoch: int = 20,
+        weighted_by: str = None
     ) -> Optional[Candidate]:
         """
         Solve for best possible gameplay given provided parameters.
@@ -115,6 +116,8 @@ class TowerDefenceSolver:
         :param candidate_pool: Number of candidates for each epoch.
         :param premature_death_reincarnation: Number of worst candidates to replace by mutation of still living one.
         :param survivors_per_epoch: Number of candidates to remain alive by the end of each epoch's simulation.
+        :param weighted_by: 'order' - weighted by order in list of candidates sorted by survival time,
+                        'time' - weighted by survival time, None - uniform
         :return:
         """
         initial_population = self.__get_initial_population(candidate_pool)
@@ -145,7 +148,6 @@ class TowerDefenceSolver:
                             candidates.remove(candidate)
 
             threshold_time = candidates[0].time
-            candidates = reproduction.reproduction(self, candidates, n_must_die)
 
             for candidate in candidates:
                 while True:
@@ -157,6 +159,9 @@ class TowerDefenceSolver:
                     highest_score = candidate.time
                     best_candidate = copy.deepcopy(candidate)
 
+            candidates = reproduction.reproduction(self, candidates, n_must_die, weighted_by=weighted_by)
+
+            for candidate in candidates:
                 candidate.refresh()
 
             print("[{: 4}] Threshold time: {: 6}    |    All time high: {: 6}".format(i, threshold_time, highest_score))

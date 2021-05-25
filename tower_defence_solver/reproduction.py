@@ -260,28 +260,40 @@ UNARY_REPRODUCTION = [addition, deletion, permutation, time_translation]
 BINARY_REPRODUCTION = [cross]
 
 
-def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many_to_add: int) -> List[Candidate]:
+def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many_to_add: int, weighted_by: str=None) -> List[Candidate]:
     """
     Reproduce the provided candidates by the given amount.
+
 
     :param game:
     :param candidates:
     :param how_many_to_add:
+    :param weighted_by: 'order' - weighted by order in list of candidates sorted by survival time,
+                        'time' - weighted by survival time, None - uniform
     :return:
     """
     how_many_added = 0
 
     while how_many_added != how_many_to_add:
+        candidates = sorted(candidates, key=lambda candidate: candidate.time)
+        if weighted_by == 'order':
+            order_range = np.arange(len(candidates), 0, -1)
+            probability_distribution = order_range/np.sum(order_range)
+        elif weighted_by == 'time':
+            times_array = np.array(list(map(lambda candidate: candidate.time, candidates)))
+            probability_distribution = times_array / np.sum(times_array)
+        else:
+            probability_distribution = None
+
         x = np.random.choice([0, 1], p=game.p_binary)
         is_binary = x == 0
         is_unary = x == 1
-
         if is_binary:
-            parent_a = np.random.choice(candidates)
+            parent_a = np.random.choice(candidates, p=probability_distribution)
             parent_b = parent_a
 
             while parent_b == parent_a:
-                parent_b = np.random.choice(candidates)
+                parent_b = np.random.choice(candidates, p=probability_distribution)
 
             operator = np.random.choice(BINARY_REPRODUCTION, p=game.p_binary_ops)
 
@@ -293,7 +305,7 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
 
         elif is_unary:
             operator = np.random.choice(UNARY_REPRODUCTION, p=game.p_unary_ops)
-            origin = np.random.choice(candidates)
+            origin = np.random.choice(candidates, p=probability_distribution)
             element_to_add = operator(game, origin)
             if element_to_add is not None:
                 candidates.append(element_to_add)
