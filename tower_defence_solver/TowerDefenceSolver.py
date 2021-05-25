@@ -78,7 +78,7 @@ class TowerDefenceSolver:
             possible_options = [item for item in self.tower_types.items() if item[1]["cost"] <= gold_for_sample]
 
             while possible_options:
-                purchase_time = utils.get_random_purchase_time(0.3)
+                purchase_time = utils.get_random_initial_purchase_time(0.3)
                 tower_idx, tower = utils.choose_random_tower(possible_options)
 
                 dmg_height, dmg_width = tower["dmg"].shape

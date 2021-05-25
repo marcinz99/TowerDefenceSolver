@@ -16,7 +16,7 @@ from typing import List, Dict
 
 
 class Candidate:
-    def __init__(self, purchases: List[Dict], game: TowerDefenceSolver) -> None:
+    def __init__(self, purchases: List[Dict], game: TowerDefenceSolver, time: int = 0) -> None:
         """
         Candidate instance.
 
@@ -25,7 +25,7 @@ class Candidate:
         """
         self.game = game
         self.purchases = purchases
-        self.time = 0
+        self.time = time
         self.dmg_map = np.zeros((self.game.map_height, self.game.map_width))
         self.opponent_hp = np.zeros((self.game.map_height, self.game.map_width))
         self.gold = self.game.initial_gold
