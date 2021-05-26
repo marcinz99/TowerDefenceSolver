@@ -76,7 +76,8 @@ class TestTDSolver(unittest.TestCase):
             epochs=20,
             candidate_pool=100,
             premature_death_reincarnation=3,
-            survivors_per_epoch=20
+            survivors_per_epoch=20,
+            weighted_by='time'
         )
         print(solution)
         self.assertTrue(solution is not None)
