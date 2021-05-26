@@ -6,7 +6,7 @@ Tower Defence Solver.
 Utilities.
 """
 import numpy as np
-from tower_defence_solver import TowerDefenceSolver
+from tower_defence_solver import TowerDefenceSolver, utils
 from typing import List, Tuple, Dict, Optional
 
 Purchases = List[Dict]
@@ -134,3 +134,23 @@ def get_dmg_patch(game: TowerDefenceSolver, coords: Tuple[int, int], tower_type:
             additional_dmg[row + j, col + i] = patch[radius_col + i, radius_row + j]
 
     return additional_dmg/2
+
+
+def get_random_purchase(game: TowerDefenceSolver, purchases: Purchases, time: int) -> Dict:
+    """
+    :param game: instance of tower defence emulator
+    :param purchases: list of towers planned to be bought
+    :param time: earliest time possible of purchase
+    :return:
+    """
+    # Random tower type, position and time in future base on variable 'time'
+    purchase = {"type": np.random.choice(len(game.tower_types))}
+    dmg_height, dmg_width = game.tower_types[purchase["type"]]["dmg"].shape
+    purchase["coords"] = utils.get_random_position_near_path(
+        game=game,
+        cov_xx=dmg_width // 2,
+        cov_yy=dmg_height // 2,
+        purchased_towers=purchases
+    )
+    purchase["time"] = time + utils.get_random_purchase_time(0.3)
+    return purchase

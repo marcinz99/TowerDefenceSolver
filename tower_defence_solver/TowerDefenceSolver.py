@@ -142,7 +142,7 @@ class TowerDefenceSolver:
                             break
 
                         if left_to_add > 0:
-                            # swap_sim()
+                            candidate.swap_sim(candidates)
                             left_to_add -= 1
                         else:
                             candidates.remove(candidate)

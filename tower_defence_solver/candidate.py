@@ -5,10 +5,13 @@ Tower Defence Solver.
 
 Candidate class.
 """
+# Required for typing class inside itself
+from __future__ import annotations
+
 import copy
 import numpy as np
 from tower_defence_solver.utils import get_dmg_patch
-from tower_defence_solver import TowerDefenceSolver
+from tower_defence_solver import TowerDefenceSolver, utils
 from typing import List, Dict
 
 
@@ -41,6 +44,35 @@ class Candidate:
         frame += "\n" + str(self.dmg_map)
         frame += "\n" + str(self.initial_purchases) + "\n"
         return frame
+
+    def swap_sim(self, candidates: List[Candidate]) -> None:
+        """
+        :param candidates: List of alive candidates
+        :return: None
+        """
+        base_candidate = np.random.choice(candidates)
+        while base_candidate == self:
+            base_candidate = np.random.choice(candidates)
+
+        self.purchases = copy.deepcopy(base_candidate.purchases)
+        self.dmg_map = np.copy(base_candidate.dmg_map)
+        self.opponent_hp = np.copy(base_candidate.opponent_hp)
+        self.time = base_candidate.time
+        self.gold = base_candidate.gold
+
+        purchases_todo = [purchase for purchase in self.purchases if purchase["time"] >= self.time]
+        for purchase in purchases_todo:
+            modified_purchase = utils.get_random_purchase(self.game, self.purchases, self.time)
+            # Randomly change tower type, position and maybe buy a bit later
+            purchase["type"] = modified_purchase["type"]
+            purchase["coords"] = modified_purchase["coords"]
+            purchase["time"] = modified_purchase["time"]
+
+        future_purchases = np.random.choice(3)
+        for _ in range(future_purchases):
+            self.purchases.append(utils.get_random_purchase(self.game, self.purchases, self.time))
+
+        self.purchases = sorted(self.purchases, key=lambda x: x["time"])
 
     def refresh(self) -> None:
         """

@@ -75,7 +75,7 @@ class TestTDSolver(unittest.TestCase):
         solution = game.solve(
             epochs=20,
             candidate_pool=100,
-            premature_death_reincarnation=0,
+            premature_death_reincarnation=3,
             survivors_per_epoch=20,
             weighted_by='time'
         )
