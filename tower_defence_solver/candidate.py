@@ -33,16 +33,29 @@ class Candidate:
 
         self.initial_purchases = copy.deepcopy(purchases)
 
+        self.delayed_purchases = []
+        self.bought_purchases = []
+
     def __repr__(self) -> str:
         """
         Get string representation of the candidate.
 
         :return:
         """
-        frame = "TIME = {}, HP = {}, GOLD = {}".format(self.time, self.base_hp, self.gold)
-        frame += "\n" + str(self.opponent_hp)
-        frame += "\n" + str(self.dmg_map)
-        frame += "\n" + str(self.initial_purchases) + "\n"
+        frame = "\n[CANDIDATE]\n\tTIME = {}, HP = {}, GOLD = {}".format(self.time, self.base_hp, self.gold)
+        frame += "\n\nOPPONENT HP MAP:\n" + str(self.opponent_hp)
+        frame += "\n\nTOWER DAMAGE MAP:\n" + str(self.dmg_map)
+        frame += "\n\nInitial purchases:\n\t" + str(self.initial_purchases) + "\n"
+
+        unique_delays = self.get_unique_delays()
+        frame += f"\nDelayed purchases ({len(unique_delays)}):\n"
+        for purchase in unique_delays.values():
+            frame += f"\tPurchase: {purchase[0]} -- final buy time: {purchase[1] + 1}\n"
+
+        frame += f"\nBought towers ({len(self.bought_purchases)}):\n"
+        for tower in self.bought_purchases:
+            frame += f"\tTower: {tower}\n"
+
         return frame
 
     def swap_sim(self, candidates: List[Candidate]) -> None:
@@ -87,6 +100,21 @@ class Candidate:
         self.gold = self.game.initial_gold
         self.base_hp = self.game.initial_hp
 
+        self.delayed_purchases = []
+        self.bought_purchases = []
+
+    def get_unique_delays(self):
+        used_purchases_coords = {}
+        for dp in self.delayed_purchases:
+            unique = dp['coords'], dp['type']
+
+            if unique not in used_purchases_coords:
+                used_purchases_coords[unique] = dp.copy(), dp['time']
+            else:
+                used_purchases_coords[unique] = used_purchases_coords[unique][0], dp['time']
+
+        return used_purchases_coords
+
     def simulate_step(self) -> None:
         """
         Simulate one step.
@@ -109,7 +137,9 @@ class Candidate:
                 purchase = self.purchases.pop(0)
                 self.gold -= tower_cost
                 self.dmg_map += get_dmg_patch(self.game, purchase["coords"], purchase["type"])
+                self.bought_purchases.append(purchase.copy())
             else:
+                self.delayed_purchases.append(self.purchases[0].copy())
                 self.purchases[0]["time"] += 1
 
         # Move opponent units forward
