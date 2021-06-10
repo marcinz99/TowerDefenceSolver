@@ -72,7 +72,7 @@ class TestTDSolver(unittest.TestCase):
             unary_ops_prob_distribution=[0.8, 0.06, 0.07, 0.07],
             binary_ops_prob_distribution=None,
         )
-        solution = game.solve(
+        solution, history = game.solve(
             epochs=20,
             candidate_pool=100,
             premature_death_reincarnation=3,
@@ -80,6 +80,11 @@ class TestTDSolver(unittest.TestCase):
             weighted_by='time'
         )
         print(solution)
+
+        np.save('generated/dmg_map_1', solution.dmg_map)
+        with open('generated/history_1.txt', mode='a') as file:
+            file.write(' '.join(history) + '\n')
+
         self.assertTrue(solution is not None)
 
 

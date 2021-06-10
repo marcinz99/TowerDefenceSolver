@@ -108,7 +108,7 @@ class TowerDefenceSolver:
         premature_death_reincarnation: int = 0,
         survivors_per_epoch: int = 20,
         weighted_by: str = None
-    ) -> Optional[Candidate]:
+    ) -> Tuple[Optional[Candidate], List[str]]:
         """
         Solve for best possible gameplay given provided parameters.
 
@@ -123,6 +123,7 @@ class TowerDefenceSolver:
         initial_population = self.__get_initial_population(candidate_pool)
         highest_score = -1
         best_candidate = None
+        all_time_highs = []
 
         candidates = [Candidate(purchases, self) for purchases in initial_population]
         n_must_die = candidate_pool + premature_death_reincarnation - survivors_per_epoch
@@ -165,5 +166,6 @@ class TowerDefenceSolver:
                 candidate.refresh()
 
             print("[{: 4}] Threshold time: {: 6}    |    All time high: {: 6}".format(i, threshold_time, highest_score))
+            all_time_highs += [str(highest_score)]
 
-        return best_candidate
+        return best_candidate, all_time_highs
