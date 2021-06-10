@@ -45,7 +45,7 @@ class Candidate:
         frame = "\n[CANDIDATE]\n\tTIME = {}, HP = {}, GOLD = {}".format(self.time, self.base_hp, self.gold)
         frame += "\n\nOPPONENT HP MAP:\n" + str(self.opponent_hp)
         frame += "\n\nTOWER DAMAGE MAP:\n" + str(self.dmg_map)
-        frame += "\n\nInitial purchases:\n\t" + str(self.initial_purchases) + "\n"
+        frame += "\n\nPlanned purchases:\n\t" + str(self.initial_purchases) + "\n"
 
         unique_delays = self.get_unique_delays()
         frame += f"\nDelayed purchases ({len(unique_delays)}):\n"
