@@ -47,8 +47,8 @@ class TestTDSolver(unittest.TestCase):
             enemy_spawning_function=enemy.spawn1,
             initial_hp=100,
             initial_gold=2000,
-            binary_op_prob=0.4,
-            unary_ops_prob_distribution=[0.8, 0.06, 0.07, 0.07],
+            binary_op_prob=0.3,
+            unary_ops_prob_distribution=[0.76, 0.05, 0.06, 0.06, 0.07],
             binary_ops_prob_distribution=None,
         )
         solution, history = game.solve(
