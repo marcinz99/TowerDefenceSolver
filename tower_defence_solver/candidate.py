@@ -135,6 +135,7 @@ class Candidate:
             tower_cost = self.game.tower_types[self.purchases[0]["type"]]["cost"]
             if tower_cost <= self.gold:
                 purchase = self.purchases.pop(0)
+                utils.check_for_tower_rebuy(self.game, purchase, self.bought_purchases, self.dmg_map)
                 self.gold -= tower_cost
                 self.dmg_map += get_dmg_patch(self.game, purchase["coords"], purchase["type"])
                 self.bought_purchases.append(purchase.copy())

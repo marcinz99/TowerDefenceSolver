@@ -16,7 +16,7 @@ def get_random_purchase_time(time: int) -> int:
     if np.random.rand() < 0.9:
         return int(np.random.uniform(0, time))
     else:
-        return int(np.abs(np.random.standard_cauchy()*0.2*time)+time)
+        return int(np.abs(np.random.standard_cauchy() * 0.2 * time) + time)
 
 
 def get_random_initial_purchase_time(p: float) -> int:
@@ -51,11 +51,11 @@ def validate_pos(game: TowerDefenceSolver, position: Tuple[int, int], purchases_
     :return: True if the place is not occupied and is inside the map, False otherwise
     """
     if (
-        position[0] < 0
-        or position[1] < 0
-        or position[0] >= game.map_height
-        or position[1] >= game.map_width
-        or position in game.path
+            position[0] < 0
+            or position[1] < 0
+            or position[0] >= game.map_height
+            or position[1] >= game.map_width
+            or position in game.path
     ):
         return False
 
@@ -67,11 +67,11 @@ def validate_pos(game: TowerDefenceSolver, position: Tuple[int, int], purchases_
 
 
 def get_random_position_near_path(
-    game: TowerDefenceSolver,
-    cov_xx: int,
-    cov_yy: int,
-    purchased_towers: Purchases,
-    max_number_of_tries: Optional[int] = None,
+        game: TowerDefenceSolver,
+        cov_xx: int,
+        cov_yy: int,
+        purchased_towers: Purchases,
+        max_number_of_tries: Optional[int] = None,
 ) -> Optional[Tuple[int, int]]:
     """
     May require to increase cov_x and cov_y as function retries to find free space
@@ -133,7 +133,7 @@ def get_dmg_patch(game: TowerDefenceSolver, coords: Tuple[int, int], tower_type:
 
             additional_dmg[row + j, col + i] = patch[radius_col + i, radius_row + j]
 
-    return additional_dmg/2
+    return additional_dmg / 2
 
 
 def get_random_purchase(game: TowerDefenceSolver, purchases: Purchases, time: int) -> Dict:
@@ -154,3 +154,33 @@ def get_random_purchase(game: TowerDefenceSolver, purchases: Purchases, time: in
     )
     purchase["time"] = time + utils.get_random_purchase_time(0.3)
     return purchase
+
+
+def find_tower_on_this_spot(spot: Tuple[int, int], bought_towers: Purchases):
+    """
+    :param spot: spot to check
+    :param bought_towers: list of already done purchases
+    :return:
+    """
+    for tower in bought_towers:
+        if tower["coords"] == spot:
+            return tower
+    return None
+
+
+def check_for_tower_rebuy(game: TowerDefenceSolver,
+                          purchase: Dict,
+                          bought_towers: Purchases,
+                          dmg_patch: np.array):
+    """
+    :param game: instance of tower defence emulator
+    :param purchase: purchase to check for rebuy
+    :param bought_towers: list of already done purchases
+    :param dmg_patch: array representing damage done by towers
+    :return:
+    """
+    spot = purchase["coords"]
+    prior_tower = find_tower_on_this_spot(spot, bought_towers)
+    if prior_tower:
+        # If there is a tower on the spot, we remove it so we can place a new tower
+        dmg_patch -= get_dmg_patch(game, spot, prior_tower["type"])

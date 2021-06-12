@@ -15,6 +15,7 @@ from typing import List, Dict, Tuple, Optional, Union
 Purchases = List[Dict]
 MAX_TRIES = 10
 
+
 # ========== UNARY OPERATORS ==========
 
 
@@ -145,6 +146,43 @@ def time_translation(game: TowerDefenceSolver, origin: Candidate) -> Optional[Ca
     return Candidate(new_purchases, game, time=time)
 
 
+def replace_tower_with_another(game: TowerDefenceSolver, origin: Candidate) -> Optional[Candidate]:
+    """
+    Returns candidate with purchases list the same as origin's purchase list, but with one extra purchase made
+    in place of other already existing (selling mechanic).
+    The created purchase can be as well postponed as preponed.
+
+    :param game: Instance of tower defence emulator
+    :param origin: candidate, on whose purchases list new candidate purchased will be based on
+    :return: candidate with one purchase translated in time if possible, None otherwise
+    """
+    time = origin.time
+    (
+        purchases_before_simulation_has_finished,
+        purchases_after_simulation_has_finished,
+    ) = split_purchases_into_minimum_n_elements_at_given_point_in_time(1, time, origin.initial_purchases)
+
+    if purchases_before_simulation_has_finished is None:
+        return None
+
+    id_to_be_translated = np.random.choice(len(purchases_before_simulation_has_finished))
+    new_purchases = copy.deepcopy(purchases_before_simulation_has_finished)
+
+    purchase = copy.deepcopy(new_purchases[id_to_be_translated])
+    current_type = purchase["type"]
+
+    new_purchase_time = purchase.get("time") + 5 + utils.get_random_initial_purchase_time(0.2)
+    new_purchases.extend(purchases_after_simulation_has_finished)
+
+    purchase["time"] = int(new_purchase_time)
+    purchase["type"] = np.random.choice([tower[0] for tower in game.tower_types.items()
+                                         if tower[1]["cost"] >= game.tower_types[current_type]["cost"]])
+    new_purchases.append(purchase)
+    new_purchases = sorted(new_purchases, key=lambda x: x["time"])
+
+    return Candidate(new_purchases, game, time=time)
+
+
 # ========== BINARY OPERATORS ==========
 
 
@@ -232,7 +270,7 @@ def get_split_points(purchases: Purchases) -> Tuple[int, int]:
 
 
 def split_purchases_into_minimum_n_elements_at_given_point_in_time(
-    n: int, time: int, purchases: Purchases
+        n: int, time: int, purchases: Purchases
 ) -> Union[Tuple[Purchases, Purchases], Tuple[None, None]]:
     """
     Splits the given purchases list into two parts in the given point of time,
@@ -256,11 +294,12 @@ def split_purchases_into_minimum_n_elements_at_given_point_in_time(
     return purchases_before_time, purchases_after_time
 
 
-UNARY_REPRODUCTION = [addition, deletion, permutation, time_translation]
+UNARY_REPRODUCTION = [addition, deletion, permutation, time_translation, replace_tower_with_another]
 BINARY_REPRODUCTION = [cross]
 
 
-def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many_to_add: int, weighted_by: str=None) -> List[Candidate]:
+def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many_to_add: int,
+                 weighted_by: str = None) -> List[Candidate]:
     """
     Reproduce the provided candidates by the given amount.
 
@@ -278,7 +317,7 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
         candidates = sorted(candidates, key=lambda candidate: candidate.time)
         if weighted_by == 'order':
             order_range = np.arange(len(candidates), 0, -1)
-            probability_distribution = order_range/np.sum(order_range)
+            probability_distribution = order_range / np.sum(order_range)
         elif weighted_by == 'time':
             times_array = np.array(list(map(lambda candidate: candidate.time, candidates)))
             probability_distribution = times_array / np.sum(times_array)
