@@ -45,6 +45,7 @@ class TestTDSolver(unittest.TestCase):
             binary_op_prob=0.4,
             unary_ops_prob_distribution=[0.8, 0.06, 0.07, 0.07, 0.0],
             binary_ops_prob_distribution=None,
+            dmg_to_gold_factor=1.0
         )
         solution, history = game.solve(
             epochs=20,

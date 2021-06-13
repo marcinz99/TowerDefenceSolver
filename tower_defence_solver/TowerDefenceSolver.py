@@ -26,6 +26,7 @@ class TowerDefenceSolver:
         binary_op_prob: Optional[float] = None,
         unary_ops_prob_distribution: Optional[List[float]] = None,
         binary_ops_prob_distribution: Optional[List[float]] = None,
+        dmg_to_gold_factor: float = 1.0
     ) -> None:
         """
         Main instance of the solver.
@@ -40,6 +41,7 @@ class TowerDefenceSolver:
         :param binary_op_prob:
         :param unary_ops_prob_distribution:
         :param binary_ops_prob_distribution:
+        :param dmg_to_gold_factor:
         """
         self.map_width = map_width
         self.map_height = map_height
@@ -61,6 +63,7 @@ class TowerDefenceSolver:
             if binary_ops_prob_distribution is not None
             else binary_ops_prob_distribution
         )
+        self.dmg_to_gold_factor = dmg_to_gold_factor
 
         self.move_generator = list(zip(self.path[::-1], self.path[-2::-1]))
 
