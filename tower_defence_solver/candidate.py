@@ -123,7 +123,7 @@ class Candidate:
         """
         # Apply damage to opponent units and obtain gold
         new_opponent_hp = np.maximum(self.opponent_hp - self.dmg_map, 0.0)
-        self.gold += np.sum(self.opponent_hp - new_opponent_hp)
+        self.gold += self.game.dmg_to_gold_factor * np.sum(self.opponent_hp - new_opponent_hp)
         self.opponent_hp = new_opponent_hp
 
         # Apply damage to your base and check if you are still alive
