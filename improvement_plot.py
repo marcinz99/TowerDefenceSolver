@@ -34,3 +34,5 @@ if __name__ == "__main__":
         plt.grid(axis="y")
         plt.tight_layout()
         plt.savefig("lifespans.png")
+
+        print("Mean result: {:.3f} (std. {:.3f})".format(np.mean(np.array(ys), axis=0)[-1], np.std(np.array(ys)[-1])))
