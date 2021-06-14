@@ -13,9 +13,11 @@ if __name__ == "__main__":
         filepath = sys.argv[1]
 
         fig = plt.figure(figsize=(12, 8))
-        plt.title("Poprawa rozwiązania w dziedzinie liczby epok")
-        plt.xlabel("Numer epoki")
-        plt.ylabel("Minimalna liczba przeżytych kwantów czasu ocaleńców")
+        plt.title("Poprawa rozwiązania w dziedzinie liczby epok ({})".format(filepath[:-4].split('\\')[1]), fontsize=16)
+        plt.xlabel("Numer epoki", fontsize=18)
+        plt.ylabel("Minimalna liczba przeżytych kwantów czasu ocaleńców", fontsize=18)
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=18)
         ys = []
         I_FROM = 0
 
@@ -33,6 +35,6 @@ if __name__ == "__main__":
         )
         plt.grid(axis="y")
         plt.tight_layout()
-        plt.savefig("lifespans.png")
+        plt.savefig("lifespans/" + filepath[:-4].split('\\')[1] + ".png")
 
         print("Mean result: {:.3f} (std. {:.3f})".format(np.mean(np.array(ys), axis=0)[-1], np.std(np.array(ys), axis=0)[-1]))
