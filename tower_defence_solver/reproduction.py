@@ -325,9 +325,10 @@ def reproduction(game: TowerDefenceSolver, candidates: List[Candidate], how_many
             probability_distribution = None
 
         x = np.random.choice([0, 1], p=game.p_binary)
-        is_binary = x == 0
-        is_unary = x == 1
+        is_binary = x == 1
+        is_unary = x == 0
         if is_binary:
+
             parent_a = np.random.choice(candidates, p=probability_distribution)
             parent_b = parent_a
 
